@@ -1,15 +1,9 @@
-# KVstorageBaseRaft-cpp
-
-> ⭐️ 本项目为[【代码随想录知识星球】](https://programmercarl.com/other/kstar.html) 教学项目  
-> ⭐️ 在 [分布式KV存储项目文档](https://www.programmercarl.com/other/project_fenbushi.html)  里详细讲解：**项目前置知识 + 项目细节 +  代码解读 + 项目难点 + 面试题与回答 + 简历写法  + 项目拓展**。 全面帮助你用这个项目求职面试！
-
+# raftKVStorage-cpp 
 
 > notice：本项目的目的是学习Raft的原理，并实现一个简单的k-v存储数据库。因此并不适用于生产环境。
 
 ## 分支说明
-- main：最新内容，已经实现一个简单的clerk
-- rpc：基于muduo和rpc框架相关内容
-- raft_DB：基于Raft的k-v存储数据库，主要用于观察选举过程
+- main：最新内容
 
 ## 使用方法
 
