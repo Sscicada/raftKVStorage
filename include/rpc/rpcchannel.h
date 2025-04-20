@@ -1,7 +1,3 @@
-/**
-channel类：作为 RPC 通道，管理网络通信，封装底层的网络通信细节（如 TCP 或 UDP）
-*/
-
 #ifndef RPCCHANNEL_H
 #define RPCCHANNEL_H
 
@@ -13,6 +9,9 @@ channel类：作为 RPC 通道，管理网络通信，封装底层的网络通�
 #include <google/protobuf/message.h>
 #include <google/protobuf/service.h>
 
+/**
+channel类：作为 RPC 通道，管理网络通信，封装服务调用方和提供方的网络通信细节
+*/
 class RpcChannel : public google::protobuf::RpcChannel {
 public:
     RpcChannel(std::string ip, short port, bool connect);
@@ -21,10 +20,11 @@ public:
         const google::protobuf::Message *request, google::protobuf::Message *response,
         google::protobuf::Closure *done) override;
 private:
-    std::string ip;
-    uint16_t port;
+    const std::string ip_;
+    const uint16_t port_;
+    int client_fd_;
 
-    bool Connect();
+    bool Connect(const char* ip, uint16_t port, std::string *errMsg);
 };
 
 #endif
