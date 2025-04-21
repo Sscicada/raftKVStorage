@@ -10,8 +10,9 @@
 #include <muduo/net/TcpConnection.h>
 
 /**
-    provider类：专门发布 RPC 服务的网络对象类，提供了服务端注册和提供服务的接口。
+    provider类：依赖 Muduo 和 Protobuf，专门发布 RPC 服务的网络对象类，提供了服务端注册和提供服务的接口。
     允许开发者将具体的业务逻辑绑定到某个服务接口上，并对外提供服务。
+    提供服务端的功能，用于接收客户端的请求并处理这些请求。
 */
 
 class RpcProvider {
@@ -31,6 +32,7 @@ private:
     // 服务信息
     struct ServiceInfo {
         google::protobuf::Service* service_;
+        // Key->Method name，Value->Method Descriptor
         std::unordered_map<std::string, const google::protobuf::MethodDescriptor*> method_map_;
     };
 
