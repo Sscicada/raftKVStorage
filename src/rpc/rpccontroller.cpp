@@ -1,25 +1,25 @@
-#include "mprpccontroller.h"
+#include "rpccontroller.h"
 
-MprpcController::MprpcController() {
+RpcController::RpcController() {
     status_ = false;
-    rr_txt_ = "";
+    // rr_txt_ = "";
 }
 
-void MprpcController::Reset() {
+void RpcController::Reset() {
     status_ = false;
     err_txt_ = "";
 }
 
-bool MprpcController::Failed() const { return m_failed; }
+bool RpcController::Failed() const { return status_; }
 
-std::string MprpcController::ErrorText() const { return m_errText; }
+std::string RpcController::ErrorText() const { return err_txt_; }
 
-void MprpcController::SetFailed(const std::string& reason) {
+void RpcController::SetFailed(const std::string& reason) {
     status_ = true;
     err_txt_= reason;
 }
 
 // 目前未实现具体的功能
-void MprpcController::StartCancel() {}
-bool MprpcController::IsCanceled() const { return false; }
-void MprpcController::NotifyOnCancel(google::protobuf::Closure* callback) {}
+void RpcController::StartCancel() {}
+bool RpcController::IsCanceled() const { return false; }
+void RpcController::NotifyOnCancel(google::protobuf::Closure* callback) {}

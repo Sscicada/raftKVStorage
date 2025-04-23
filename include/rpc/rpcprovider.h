@@ -2,12 +2,15 @@
 #define RPCPROVIDER_H
 
 #include <string>
+#include <functional>
 #include <unordered_map>
 
 #include <muduo/net/EventLoop.h>
 #include <muduo/net/InetAddress.h>
 #include <muduo/net/TcpServer.h>
 #include <muduo/net/TcpConnection.h>
+#include <google/protobuf/service.h>
+#include <google/protobuf/descriptor.h>
 
 /**
     provider类：依赖 Muduo 和 Protobuf，专门发布 RPC 服务的网络对象类，提供了服务端注册和提供服务的接口。
@@ -17,7 +20,7 @@
 
 class RpcProvider {
 public:
-    RpcProvider();
+    RpcProvider() {};
     ~RpcProvider();
 
     // 启动 RPC 服务节点，初始化 Muduo 的 TCP 服务器并绑定到指定端口

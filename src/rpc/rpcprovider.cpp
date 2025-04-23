@@ -1,12 +1,13 @@
-#include "rpcprovider.h"
+#include <string>
+#include <cstring>
+#include <fstream>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <cstring>
-#include <fstream>
-#include <string>
+
+#include "rpcprovider.h"
 #include "rpcheader.pb.h"
-#include "util.h"
+// #include "util.h"
 
 /**
  * @brief 注册服务到 RPC 框架中。
@@ -50,7 +51,7 @@ void RpcProvider::NotifyService(google::protobuf::Service *service) {
 
     service_info.service_ = service;
     service_map_[service_name] = service_info;
-    std::cout << "Registered service :" << serviceName << std::endl;
+    std::cout << "Registered service :" << service_name << std::endl;
 }
 
 /**
@@ -67,11 +68,11 @@ void RpcProvider::NotifyService(google::protobuf::Service *service) {
  *
  * @details
  * - **获取本地 IP 地址**：
- *   使用 `gethostname` 和 `gethostbyname` 获取本机主机名及其对应的 IP 地址列表。
+ *   使用 gethostname 和 gethostbyname 获取本机主机名及其对应的 IP 地址列表。
  *   遍历地址列表，提取第一个有效的 IPv4 地址作为服务绑定的 IP。
  * 
  * - **写入配置文件**：
- *   将服务节点的 IP 和端口信息追加写入到 `test.conf` 文件中，格式为：
+ *   将服务节点的 IP 和端口信息追加写入到 test.conf 文件中，格式为：
  *   ```
  *   node<nodeIndex>ip = <IP>
  *   node<nodeIndex>port = <Port>
@@ -84,16 +85,16 @@ void RpcProvider::NotifyService(google::protobuf::Service *service) {
  * - **绑定回调函数**：
  *   - `OnConnection`：处理连接建立和断开事件。
  *   - `OnMessage`：处理接收到的消息数据。
- *   使用 `std::bind` 将回调函数与当前对象（`this`）绑定，确保回调函数能够访问对象的状态。
+ *   使用 std::bind 将回调函数与当前对象（this）绑定，确保回调函数能够访问对象的状态。
  *
  * - **设置线程池**：
  *   设置 Muduo 库的工作线程数量（默认为 4），以支持多线程并发处理网络事件。
  *
  * - **启动服务**：
- *   调用 `muduo_server->start()` 启动服务器，并进入事件循环（`eventLoop.loop()`）以持续监听和处理网络事件。
+ *   调用 muduo_server->start() 启动服务器，并进入事件循环 eventLoop.loop() 持续监听和处理网络事件。
  *
  * @note
- * - 配置文件 `test.conf` 的写入操作使用了追加模式（`std::ios::app`），避免覆盖已有内容。
+ * - 配置文件 test.conf 的写入操作使用了追加模式（std::ios::app），避免覆盖已有内容。
  * - 事件循环会阻塞主线程，直到服务被显式停止。
  *
  * @see muduo::net::TcpServer
@@ -140,7 +141,7 @@ void RpcProvider::Run(int nodeIndex, short port) {
     muduo::net::InetAddress address(ip, port);
 
     // 创建TcpServer对象
-    muduo_server = std::make_shared<muduo::net::TcpServer>(&eventLoop, address, "RpcProvider");
+    muduo_server_ = std::make_shared<muduo::net::TcpServer>(&event_loop_, address, "RpcProvider");
 
     // 绑定连接回调和消息读写回调方法  分离了网络代码和业务代码
     /*
@@ -148,20 +149,20 @@ void RpcProvider::Run(int nodeIndex, short port) {
     如果不使用std::bind将回调函数和TcpConnection对象绑定起来，那么在回调函数中就无法直接访问和修改TcpConnection对象的状态。因为回调函数是作为一个独立的函数被调用的，它没有当前对象的上下文信息（即this指针），也就无法直接访问当前对象的状态。
     如果要在回调函数中访问和修改TcpConnection对象的状态，需要通过参数的形式将当前对象的指针传递进去，并且保证回调函数在当前对象的上下文环境中被调用。这种方式比较复杂，容易出错，也不便于代码的编写和维护。因此，使用std::bind将回调函数和TcpConnection对象绑定起来，可以更加方便、直观地访问和修改对象的状态，同时也可以避免一些常见的错误。
     */
-    muduo_server->setConnectionCallback(std::bind(&RpcProvider::OnConnection, this, std::placeholders::_1));
-    muduo_server->setMessageCallback(
+    muduo_server_->setConnectionCallback(std::bind(&RpcProvider::OnConnection, this, std::placeholders::_1));
+    muduo_server_->setMessageCallback(
         std::bind(&RpcProvider::OnMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     // 设置 muduo 库的线程数量
-    muduo_server->setThreadNum(4);
+    muduo_server_->setThreadNum(4);
 
     // 准备启动 RPC 服务，打印信息
     std::cout << "RpcProvider start service at ip:" << ip << " port:" << port << std::endl;
 
     // 启动网络服务，然后进入事件循环阶段，等待并处理各种事件
-    muduo_server->start();
-    std::cout << "RpcProvider is running on port " << port << " with index " << index << std::endl;
-    eventLoop.loop();
+    muduo_server_->start();
+    // std::cout << "RpcProvider is running on port " << port << " with index " << index << std::endl;
+    event_loop_.loop();
 }
 
 /**
@@ -210,14 +211,14 @@ void RpcProvider::OnConnection(const muduo::net::TcpConnectionPtr &conn) {
  *
  * @details
  * - **解析数据头**：
- *   使用 Protobuf 的 `CodedInputStream` 解析接收到的数据流。
- *   数据格式为：`header_size(4字节) + header_str + args_str`。
- *   - `header_size`：表示数据头的长度（变长编码）。
- *   - `header_str`：包含服务名、方法名和参数大小的序列化头部。
- *   - `args_str`：序列化的请求参数。
+ *   使用 Protobuf 的 CodedInputStream 解析接收到的数据流。
+ *   数据格式为：header_size(4字节) + header_str + args_str。
+ *   - header_size：表示数据头的长度（变长编码）。
+ *   - header_str：包含服务名、方法名和参数大小的序列化头部。
+ *   - args_str：序列化的请求参数。
  *
  * - **反序列化数据头**：
- *   根据 `header_size` 提取数据头字符串并反序列化为 `RpcHeader` 对象。
+ *   根据 header_size 提取数据头字符串并反序列化为 RpcHeader 对象。
  *   从中提取服务名、方法名和参数大小。
  *
  * - **提取请求参数**：
@@ -234,8 +235,8 @@ void RpcProvider::OnConnection(const muduo::net::TcpConnectionPtr &conn) {
  *   为 RPC 方法调用绑定一个回调函数（Closure），在方法执行完成后序列化响应并通过网络发送回客户端。
  *
  * - **调用本地业务方法**：
- *   使用 `service->CallMethod()` 调用本地注册的服务方法。
- *   - `CallMethod` 是 Protobuf 自动生成的代码中的核心方法。
+ *   使用 service->CallMethod() 调用本地注册的服务方法。
+ *   - CallMethod 是 Protobuf 自动生成的代码中的核心方法。
  *   - 它会根据传入的方法描述符自动调用用户实现的具体业务逻辑。
  *
  * @note
@@ -268,6 +269,7 @@ void RpcProvider::OnMessage(const muduo::net::TcpConnectionPtr &conn, muduo::net
     // 设置读取限制，不必担心数据读多
     google::protobuf::io::CodedInputStream::Limit msg_limit = coded_input.PushLimit(header_size);
     coded_input.ReadString(&rpc_header_str, header_size);
+
     // 恢复之前的限制，以便安全地继续读取其他数据
     coded_input.PopLimit(msg_limit);
     uint32_t args_size{};
@@ -319,7 +321,7 @@ void RpcProvider::OnMessage(const muduo::net::TcpConnectionPtr &conn, muduo::net
       return;
     }
 
-    google::protobuf::Service *service = it->second.m_service;       // 获取service对象  new UserService
+    google::protobuf::Service *service = it->second.service_;       // 获取service对象  new UserService
     const google::protobuf::MethodDescriptor *method = mit->second;  // 获取method对象  Login
 
     // 生成rpc方法调用的请求request和响应response参数,由于是rpc的请求，因此请求需要通过request来序列化
@@ -407,5 +409,5 @@ void RpcProvider::SendRpcResponse(const muduo::net::TcpConnectionPtr &conn, goog
  */
 RpcProvider::~RpcProvider() {
     std::cout << "[func - RpcProvider::~RpcProvider()]: ip 和 port 信息:" << muduo_server_->ipPort() << std::endl;
-    m_eventLoop.quit();
+    event_loop_.quit();
 }

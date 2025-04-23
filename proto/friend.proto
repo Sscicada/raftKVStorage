@@ -1,0 +1,26 @@
+// 该 proto 文件用于 example/rpc 目录下的 caller 和 callee 之间的通信
+syntax = "proto3";
+
+package fixbug;
+
+// 开启 stub 桩服务
+// 启用此选项时，protobuf 会额外生成 ​基于反射的通用服务代码​​，允许在运行时动态调用 RPC 方法，而无需依赖编译时生成的强类型 Stub。
+option cc_generic_services = true;
+
+message ResultCode {
+    int32 errcode = 1;
+    bytes errmsg = 2;
+}
+
+message GetFriendsListRequest {
+    uint32 userid = 1;
+}
+
+message GetFriendsListResponse {
+    ResultCode result = 1;
+    repeated bytes friends = 2;
+}
+
+service FriendServiceRpc {
+    rpc GetFriendsList(GetFriendsListRequest) returns(GetFriendsListResponse);
+}

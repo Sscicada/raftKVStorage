@@ -1,23 +1,14 @@
-#include "mprpcchannel.h"
+#include <cerrno>
+#include <string>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <cerrno>
-#include <string>
-#include "mprpccontroller.h"
+
+#include "rpcchannel.h"
+#include "rpccontroller.h"
 #include "rpcheader.pb.h"
-#include "util.h"
-
-
-/**
- * @brief 
- * @param
- * @details
- * @note
- *@see
-*/
-
+// #include "util.h"
 
 /**
  * @brief 调用远程服务的方法，实现 RPC 请求和响应的统一处理。
@@ -52,25 +43,27 @@
  *
  * @see google::protobuf::RpcChannel
  */
-void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
+void RpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
                               google::protobuf::RpcController* controller, const google::protobuf::Message* request,
                               google::protobuf::Message* response, google::protobuf::Closure* done) {
     // 如果当前没有可用的 TCP 连接（client_fd_ == -1），尝试重新连接到服务器
     if (client_fd_ == -1) {
         std::string errMsg;
-        bool rt = Connect(m_ip.c_str(), m_port, &errMsg);
+        bool rt = Connect(ip_.c_str(), port_, &errMsg);
         if (!rt) {
-            DPrintf("[func-MprpcChannel::CallMethod]重连接ip:{%s} port{%d}失败", m_ip.c_str(), m_port);
+            printf("[func-MprpcChannel::CallMethod]重连接ip:{%s} port{%d}失败", ip_.c_str(), port_);
             controller->SetFailed(errMsg);
             return;
         }
-        DPrintf("[func-MprpcChannel::CallMethod]连接ip:{%s} port{%d}成功", m_ip.c_str(), m_port);
+        printf("[func-MprpcChannel::CallMethod]连接ip:{%s} port{%d}成功", ip_.c_str(), port_);
     }
 
     // 构造 RPC 请求头，首先获取服务名和服务方法
     const google::protobuf::ServiceDescriptor* sd = method->service();
     std::string service_name = sd->name();
     std::string method_name = method->name();
+    std::cout << "channel service_name : " << service_name << '\n';
+    std::cout << "channel method_name : " << method_name << '\n';
 
     // 获取参数的序列化字符串长度 args_size
     uint32_t args_size{};
@@ -129,11 +122,11 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
     while (-1 == send(client_fd_, send_rpc_str.c_str(), send_rpc_str.size(), 0)) {
         char errtxt[512] = {0};
         sprintf(errtxt, "send error! errno:%d", errno);
-        std::cout << "尝试重新连接，对方ip:" << m_ip << " 对方端口:" << m_port << std::endl;
+        std::cout << "尝试重新连接，对方ip:" << ip_ << " 对方端口:" << port_ << std::endl;
         close(client_fd_);
         client_fd_ = -1;
         std::string errMsg;
-        bool rt = Connect(m_ip.c_str(), m_port, &errMsg);
+        bool rt = Connect(ip_.c_str(), port_, &errMsg);
         if (!rt) {
           controller->SetFailed(errMsg);
           return;
@@ -195,12 +188,12 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
  *
  * @see socket, connect
  */
- bool MprpcChannel::Connect(const char* ip, uint16_t port, string* errMsg) {
+ bool RpcChannel::Connect(const char* ip, uint16_t port, std::string* errMsg) {
     // 创建一个 TCP 套接字
     int clientfd = socket(AF_INET, SOCK_STREAM, 0);
     if (-1 == clientfd) {
         char errtxt[512] = {0};
-        sprintf(errtxt, "create socket error! errno:%d", errno); // 格式化错误信息
+        sprintf(errtxt, "Create socket error! errno:%d", errno); // 格式化错误信息
         client_fd_ = -1; // 确保类成员变量保持无效状态
         *errMsg = errtxt; // 将错误信息存储到 errMsg 中
         return false; // 返回连接失败
@@ -216,7 +209,7 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
     if (-1 == connect(clientfd, (struct sockaddr*)&server_addr, sizeof(server_addr))) {
         close(clientfd); // 关闭已创建的套接字，避免资源泄露
         char errtxt[512] = {0};
-        sprintf(errtxt, "connect fail! errno:%d", errno); // 格式化错误信息
+        sprintf(errtxt, "Connect fail! errno:%d", errno); // 格式化错误信息
         client_fd_ = -1; // 确保类成员变量保持无效状态
         *errMsg = errtxt; // 将错误信息存储到 errMsg 中
         return false; // 返回连接失败
@@ -224,9 +217,9 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
 
     // 连接成功，更新类成员变量
     client_fd_ = clientfd;
+    std::cout << "[DEBUG] Connecting to " << ip << ":" << port << " successfully!" << std::endl;
     return true; // 返回连接成功
 }
-
 
 /**
  * @brief 构造一个 MprpcChannel 对象，用于与指定的 RPC 服务器建立连接。
@@ -247,7 +240,7 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
  * - 如果 `connect` 为 true，则会调用 `newConnect` 方法尝试连接服务器。
  *   - 如果连接失败，会进行最多三次重试。
  *   - 每次重试都会打印错误信息到控制台。
- * - 成功连接后，套接字文件描述符会存储在类成员变量 `m_clientFd` 中。
+ * - 成功连接后，套接字文件描述符会存储在类成员变量 `client_fd_` 中。
  *
  * @note
  * - 当前实现为短连接，每次调用都需要重新连接，可能会导致性能开销较大。
@@ -256,8 +249,7 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
  *
  * @see newConnect, socket, connect
  */
- MprpcChannel::MprpcChannel(string ip, short port, bool connect)
- : m_ip(ip), m_port(port), m_clientFd(-1) {
+ RpcChannel::RpcChannel(std::string ip, short port, bool connect) : ip_(ip), port_(port), client_fd_(-1) {
     // 使用 TCP 编程完成 RPC 方法的远程调用，当前实现为短连接，未来可改成长连接。
     // 如果没有连接或者连接已经断开，则需要重新连接，并支持不断重试。
 
@@ -274,10 +266,12 @@ void MprpcChannel::CallMethod(const google::protobuf::MethodDescriptor* method,
 
     // 尝试连接服务器
     std::string errMsg;
+    std::cout << "[DEBUG] Connecting to " << ip << ":" << port << "..." << std::endl;
     auto rt = Connect(ip.c_str(), port, &errMsg); // 调用 newConnect 方法尝试连接
-    int tryCount = 3; // 最大重试次数
+    int tryCount = 1; // 最大重试次数
     while (!rt && tryCount--) {
         std::cout << errMsg << std::endl; // 打印错误信息
         rt = Connect(ip.c_str(), port, &errMsg); // 再次尝试连接
     }
+    std::cout << "[DEBUG] Connecting failed " << std::endl;
 }
