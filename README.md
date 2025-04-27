@@ -16,10 +16,9 @@
 **安装说明**
 
 - clang-format，如果你不设计提交pr，那么不用安装，这里也给出安装命令:`sudo apt-get install clang-format`
-- protoc，本地版本为3.12.4，ubuntu22使用`sudo apt-get install protobuf-compiler libprotobuf-dev`安装默认就是这个版本
+- protoc，本地版本为3.12.4，ubuntu22.04使用`sudo apt-get install protobuf-compiler libprotobuf-dev`安装默认就是这个版本
 - boost，`sudo apt-get install libboost-dev libboost-test-dev libboost-all-dev`
 - muduo,https://blog.csdn.net/QIANGWEIYUAN/article/details/89023980
-> 如果库安装编译本仓库的时候有错误或者需要确认版本信息，可以在issue页面查看其他人遇到的问题和分享： [链接](https://github.com/youngyangyang04/KVstorageBaseRaft-cpp/issues)
 
 ### 2.编译启动
 
@@ -95,12 +94,6 @@ make
 #### 使用kv
 在启动raft集群之后启动`callerMain`即可。
 
-
-## Docs
-- 如果你想创建自己的rpc，请参考example中rpc的md文件和friendRPC相关代码.此外可以见rpc分支
-- 各个文件夹文件内容说明：[这里](./docs/目录导览.md)
-> notice:在代码编写过程中可能有一些bug改进，其他分支可能并没有修复这些bug以及相应的改进。注意甄别
->同时欢迎issue提出这些bug或者pr改进。
 
 ## todoList
 
