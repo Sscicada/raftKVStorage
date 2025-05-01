@@ -13,7 +13,11 @@ enum class Role {
 
 class RaftNode {
 public:
-    RaftNode(int id, const RaftConfig& config);
+    // RaftNode(int id, const RaftConfig& config);
+
+    // 禁止拷贝和移动
+    RaftNode(const RaftNode&) = delete;
+    RaftNode& operator=(const RaftNode&) = delete;
 
     void start();                            // 启动节点
     // void handleAppendEntries(const AppendEntriesRequest& req); // 处理追加日志请求
@@ -36,7 +40,7 @@ private:
     int currentTerm_;
     int votedFor_;
 
-    RaftLog log_;
+    RaftLog* log_;
     PersistentStorage storage_;
     KVStore* stateMachine_;            // KV应用
 

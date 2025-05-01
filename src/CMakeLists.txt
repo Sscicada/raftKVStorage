@@ -1,13 +1,7 @@
-# add_subdirectory(skipList)
+# 添加 raft 目录
+add_subdirectory(raft)
 
-# add_subdirectory(common) #需要注意如果rpc中需要依靠common中的代码，则需要在rpc在前，其cmake文件中的set才对rpc文件夹可见
-# 使用include_directories()函数应该也是可行的
-add_subdirectory(rpc)
+# 创建可执行文件并链接 raftcore 库
+add_executable(raftTest main.cpp)
 
-# add_subdirectory(fiber)
-
-# add_subdirectory(raftRpcPro)
-
-add_subdirectory(raftCore)
-
-# add_subdirectory(raftClerk)
+target_link_libraries(raftTest PRIVATE raftcore)

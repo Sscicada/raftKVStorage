@@ -1,104 +1,88 @@
-# raftKVStorage-cpp 
+# RaftKVStorage - A Raft-based Distributed Key-Value Store in C++
 
-> notice：本项目的目的是学习Raft的原理，并实现一个简单的k-v存储数据库。因此并不适用于生产环境。
+> **Notice**: This project is for learning the principles of Raft and implementing a simple key-value storage database. It is not intended for production environments.
 
-## 分支说明
-- main：最新内容
+## Project Status
+Early Development
 
-## 使用方法
+## Prerequisites
 
-### 1.库准备
+### Library Dependencies
 - muduo
 - boost
 - protoc
-- clang-format（可选）
+- clang-format (optional)
 
-**安装说明**
+### Installation Instructions
 
-- clang-format，如果你不设计提交pr，那么不用安装，这里也给出安装命令:`sudo apt-get install clang-format`
-- protoc，本地版本为3.12.4，ubuntu22.04使用`sudo apt-get install protobuf-compiler libprotobuf-dev`安装默认就是这个版本
-- boost，`sudo apt-get install libboost-dev libboost-test-dev libboost-all-dev`
-- muduo,https://blog.csdn.net/QIANGWEIYUAN/article/details/89023980
+1. **clang-format** (code formatting tool):
+   ```bash
+   sudo apt-get install clang-format
+   ```
 
-### 2.编译启动
+2. **protoc** (Protocol Buffers compiler, tested with v3.12.4):
+   ```bash
+   sudo apt-get install protobuf-compiler libprotobuf-dev
+   ```
 
-#### 先启动rpc
-```
-cd KVstorageBaseRaft-cpp // 进入项目目录
-mkdir cmake-build-debug
-cd cmake-build-debug
+3. **boost** (C++ libraries):
+   ```bash
+   sudo apt-get install libboost-dev libboost-test-dev libboost-all-dev
+   ```
+
+4. **muduo** (C++ network library):
+   Follow installation guide at:  
+   [https://blog.csdn.net/QIANGWEIYUAN/article/details/89023980](https://blog.csdn.net/qq_55882840/article/details/145346115?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522390848fb287d7d8cd2264d4e3c91f674%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=390848fb287d7d8cd2264d4e3c91f674&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~sobaiduend~default-1-145346115-null-null.nonecase&utm_term=muduo%E5%BA%93%E5%AE%89%E8%A3%85&spm=1018.2226.3001.4450)
+
+## Build Instructions
+
+```bash
+mkdir build && cd build
 cmake ..
 make
 ```
-之后在目录bin就有对应的可执行文件生成：
 
-* provider
-* consumer
+## Use
 
+```bash
+./kvserver --nums 5 --cluster cluster.conf
 ```
-./provider
-``` 
+or
+```bash
+# terminal_1 - node1
+./kvserver --id 1 --cluster "1:localhost:50051,2:localhost:50052,3:localhost:50053"
 
-![](docs/images/rpc1.jpg)
+# terminal_2 - node2
+./kvserver --id 2 --cluster "1:localhost:50051,2:localhost:50052,3:localhost:50053"
 
-
-换一个窗口，在执行 consumer 
-
+# terminal_3 - node3
+./kvserver --id 3 --cluster "1:localhost:50051,2:localhost:50052,3:localhost:50053"
 ```
-./consumer
-``` 
-
-![](docs/images/rpc2.jpg)
-
-运行即可，注意先运行provider，再运行consumer，原因很简单：需要先提供rpc服务，才能去调用。
-
-
-#### 使用raft集群
-之后在目录bin就有对应的可执行文件生成，
-```
-// make sure you in bin directory ,and this has a test.conf file
-./raftCoreRun -n 3 -f test.conf
-```
-
-![](docs/images/raft.jpg)
-
-这里更推荐一键运行，使用clion/clion nova，点击这个按钮即可：
-
-![img.png](docs/images/img.png)
-
-正常运行后，命令行应该有如下raft的运行输出：
-```
-20231228 13:04:40.570744Z 615779 INFO  TcpServer::newConnection [RpcProvider] - new connection [RpcProvider-127.0.1.1:16753#2] from 127.0.0.1:37234 - TcpServer.cc:80
-[2023-12-28-21-4-41] [Init&ReInit] Sever 0, term 0, lastSnapshotIncludeIndex {0} , lastSnapshotIncludeTerm {0}
-[2023-12-28-21-4-41] [Init&ReInit] Sever 1, term 0, lastSnapshotIncludeIndex {0} , lastSnapshotIncludeTerm {0}
-[2023-12-28-21-4-41] [Init&ReInit] Sever 2, term 0, lastSnapshotIncludeIndex {0} , lastSnapshotIncludeTerm {0}
-[2023-12-28-21-4-41] [       ticker-func-rf(1)              ]  选举定时器到期且不是leader，开始选举
-
-[2023-12-28-21-4-41] [func-sendRequestVote rf{1}] 向server{1} 發送 RequestVote 開始
-[2023-12-28-21-4-41] [func-sendRequestVote rf{1}] 向server{1} 發送 RequestVote 開始
-[2023-12-28-21-4-41] [func-sendRequestVote rf{1}] 向server{1} 發送 RequestVote 完畢，耗時:{0} ms
-[2023-12-28-21-4-41] [func-sendRequestVote rf{1}] elect success  ,current term:{1} ,lastLogIndex:{0}
-
-[2023-12-28-21-4-41] [func-sendRequestVote rf{1}] 向server{1} 發送 RequestVote 完畢，耗時:{0} ms
-[2023-12-28-21-4-41] [func-Raft::doHeartBeat()-Leader: {1}] Leader的心跳定时器触发了
-
-[2023-12-28-21-4-41] [func-Raft::doHeartBeat()-Leader: {1}] Leader的心跳定时器触发了 index:{0}
-
-[2023-12-28-21-4-41] [func-Raft::doHeartBeat()-Leader: {1}] Leader的心跳定时器触发了 index:{2}
-
-[2023-12-28-21-4-41] [func-Raft::sendAppendEntries-raft{1}] leader 向节点{0}发送AE rpc開始 ， args->entries_size():{0}
-[2023-12-28-21-4-41] [func-Raft::sendAppendEntries-raft{1}] leader 向节点{2}发送AE rpc開始 ， args->entries_size():{0}
-[2023-12-28-21-4-41] [func-Raft::doHeartBeat()-Leader: {1}] Leader的心跳定时器触发了
+raft cluster
+```bash
+----------------------------------------
+|          Raft Cluster State          |
+----------------------------------------
+| [ Node 1 ] Role: Leader  Term: 7     |
+| [ Node 2 ] Role: Follower Term: 7    |
+| [ Node 3 ] Role: Follower Term: 7    |
+|--------------------------------------|
+| Leader ID: Node 1                    |
+| Election Timeout: 150ms              |
+| Heartbeat Interval: 50ms             |
+|--------------------------------------|
+| Log Progress                         |
+| Node 1 [##########......] 80%        |
+| Node 2 [#######.........] 50%        |
+| Node 3 [#########.......] 60%        |
+----------------------------------------
 ```
 
-#### 使用kv
-在启动raft集群之后启动`callerMain`即可。
-
-
-## todoList
-
-- [x] 完成raft节点的集群功能
-- [ ] 去除冗余的库：muduo、boost 
-- [ ] 代码精简优化
-- [x] code format
-- [ ] 代码解读 maybe
+run raft clerk
+```bash
+./kvclient localhost:50051 localhost:50052 localhost:50053
+> put name Alice
+OK
+> get name
+Alice
+```

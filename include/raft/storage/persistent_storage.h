@@ -3,7 +3,8 @@
 
 #include <vector>
 #include <string>
-#include "raft_log.h"
+
+#include "raftCore/raft_log.h"
 
 /*
     Raft 协议自己需要的持久化存储组件。

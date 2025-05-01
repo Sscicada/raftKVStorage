@@ -32,13 +32,13 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 # message(STATUS "PROTO_HDR=${PROTO_HDR}")  # 应显示生成的 .pb.h 文件路径
 
 # 设置项目编译头文件搜索路径
-include_directories(${PROJECT_SOURCE_DIR}/include/common)
+# include_directories(${PROJECT_SOURCE_DIR}/include/common)
 # include_directories(${PROJECT_SOURCE_DIR}/include/fiber)
-include_directories(${PROJECT_SOURCE_DIR}/include/rpc)
+# include_directories(${PROJECT_SOURCE_DIR}/include/rpc)
 include_directories(${PROJECT_SOURCE_DIR}/example)
-include_directories(${CMAKE_BINARY_DIR}/example/rpc)
+# include_directories(${CMAKE_BINARY_DIR}/example/rpc)
 
-# include_directories(${PROJECT_SOURCE_DIR}/include/raftCore)
+include_directories(${PROJECT_SOURCE_DIR}/include/raft)
 # include_directories(${PROJECT_SOURCE_DIR}/include/raftRpcPro)
 # include_directories(${PROJECT_SOURCE_DIR}/include/raftClerk)
 # include_directories(${PROJECT_SOURCE_DIR}/include/skipList)
@@ -53,7 +53,7 @@ link_directories(${PROJECT_SOURCE_DIR}/lib)
 add_subdirectory(src)
 
 # example 包含模块的示例代码
-add_subdirectory(example)
+# add_subdirectory(example)
 
 # add_library(skip_list_on_raft STATIC  ${src_rpc} ${src_fiber} ${rpc_example} ${raftsource} ${src_raftCore} ${src_raftRpcPro})
 # target_link_libraries(skip_list_on_raft muduo_net muduo_base pthread dl)

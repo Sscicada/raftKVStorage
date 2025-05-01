@@ -7,22 +7,14 @@
 #include <memory>
 #include <iostream>
 
-#include <raft_log.h>
-#include <state_machine.h>
+#include <raftCore/raft_log.h>
+#include <raftCore/state_machine.h>
+#include <storage/persistent_storage.h>
 
-#include <iostream>
-#include "log_entry.h"
-#include "raft_log.h"
-#include "state_machine.h"
-#include "persistent_storage.h"
-
+/*
+单节点追加日志
+*/
 int main() {
-    // 初始化持久化存储
-    PersistentStorage storage("./data/node1");
-    int currentTerm = storage.loadCurrentTerm();
-    int votedFor = storage.loadVotedFor();
-    std::vector<LogEntry> logEntries = storage.loadLog();
-
     // 初始化日志模块
     RaftLog raftLog(logEntries);
 
@@ -36,7 +28,7 @@ int main() {
     entry.command = "set x 1";
 
     raftLog.appendEntry(entry);
-    storage.saveLog(raftLog.getEntries()); // 持久化日志
+    // storage.saveLog(raftLog.getEntries()); // 持久化日志
 
     // 应用日志到状态机（模拟 commit）
     const auto& committedLogs = raftLog.getEntries();
@@ -93,5 +85,44 @@ int main() {
 //         g_raft_node->submit_command(command);
 //     }
 
+//     return 0;
+// }
+
+
+// int main(int argc, char* argv[]) {
+//     // 解析配置
+//     int nodeId = std::stoi(argv[1]);
+//     std::vector<Peer> peers = loadPeersFromConfig();
+    
+//     // 创建并启动Raft节点
+//     RaftNode raftNode(nodeId, peers);
+    
+//     // 创建KV存储
+//     KVStore kvStore;
+    
+//     // 启动RPC服务器
+//     RaftRPCServer rpcServer;
+//     rpcServer.RegisterRequestVoteHandler(
+//         [&raftNode](const RequestVoteArgs& args, RequestVoteReply& reply) {
+//             raftNode.HandleRequestVote(args, reply);
+//         });
+//     rpcServer.RegisterAppendEntriesHandler(
+//         [&raftNode](const AppendEntriesArgs& args, AppendEntriesReply& reply) {
+//             raftNode.HandleAppendEntries(args, reply);
+//         });
+//     rpcServer.Start();
+    
+//     // 主循环
+//     while (true) {
+//         // 应用已提交的日志到状态机
+//         raftNode.ApplyLogsToStateMachine([&kvStore](const std::string& command) {
+//             return kvStore.Apply(command);
+//         });
+        
+//         // 其他维护工作...
+//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//     }
+    
+//     rpcServer.Stop();
 //     return 0;
 // }
