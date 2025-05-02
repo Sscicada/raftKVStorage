@@ -1,0 +1,11 @@
+
+package kvServer;
+
+
+service kvServerRpc {
+  //PutAppend(args *PutAppendArgs, reply *PutAppendReply)
+  //Get(args *GetArgs, reply *GetReply)
+
+  rpc PutAppend(PutAppendArgs) returns(PutAppendReply);
+  rpc Get (GetArgs) returns (GetReply);
+}

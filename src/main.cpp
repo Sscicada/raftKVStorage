@@ -16,25 +16,15 @@
 */
 int main() {
     // 初始化日志模块
-    RaftLog raftLog(logEntries);
+    RaftLog raftLog;
+
+    raftLog.appendEntry(LogEntry{0, 0, "put x 1"});
 
     // 初始化状态机（KV存储）
     KVStore stateMachine;
 
-    // 构造并追加一个新日志条目
-    LogEntry entry;
-    entry.term = currentTerm;
-    entry.index = raftLog.nextIndex();  // 假设 nextIndex() 给出当前应写入的位置
-    entry.command = "set x 1";
-
     raftLog.appendEntry(entry);
     // storage.saveLog(raftLog.getEntries()); // 持久化日志
-
-    // 应用日志到状态机（模拟 commit）
-    const auto& committedLogs = raftLog.getEntries();
-    for (const auto& e : committedLogs) {
-        stateMachine.apply(e);
-    }
 
     // 查询状态机是否成功写入
     std::cout << "Query result of key 'x': " << stateMachine.query("x") << std::endl;

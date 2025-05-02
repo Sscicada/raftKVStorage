@@ -15,14 +15,16 @@ public:
     virtual std::string query(const std::string& key) = 0;
 };
 
-// 上层业务，负责 KV 存储
-class KVStore : public StateMachine {
+// 上层服务，负责 KV 存储
+class KVServer : public StateMachine {
 public:
     void apply(const LogEntry& entry) override;
     std::string query(const std::string& key) override;
-    
+
 private:
+    // 暂时先用这个存储键值对
+    // TODO：持久化
     std::unordered_map<std::string, std::string> store_;
 };
-    
+
 #endif // RAFT_STATE_MACHINE_H

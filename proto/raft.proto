@@ -1,18 +1,16 @@
 syntax = "proto3";
 
+// 命名空间
 package raft;
 
 // --- 基本的 Log Entry 定义 ---
 message LogEntry {
     uint64 index = 1;       // 日志索引
     uint64 term = 2;        // 日志对应的任期
-    string key = 3;         // 针对KV存储的key
-    string value = 4;       // 值
-    string op = 5;          // 操作类型: "set", "delete"
+    bytes command = 3;     // 客户端指令，这里用 bytes 而不是 string
 }
 
-// --- RequestVote RPC ---
-
+// --- 请求投票 ---
 message RequestVoteRequest {
     uint64 term = 1;            // 候选人当前任期
     uint64 candidate_id = 2;    // 候选人 ID
@@ -20,13 +18,13 @@ message RequestVoteRequest {
     uint64 last_log_term = 4;   // 候选人最后日志任期
 }
 
+// --- 投票响应消息 ---
 message RequestVoteResponse {
     uint64 term = 1;         // 当前任期
     bool vote_granted = 2;   // 是否投票
 }
 
-// --- AppendEntries RPC ---
-
+// --- 心跳消息 ---
 message AppendEntriesRequest {
     uint64 term = 1;            // 当前Leader任期
     uint64 leader_id = 2;       // Leader ID
@@ -36,37 +34,31 @@ message AppendEntriesRequest {
     uint64 leader_commit = 6;   // Leader已提交的最大日志索引
 }
 
+// --- 心跳响应 ---
 message AppendEntriesResponse {
     uint64 term = 1;          // 当前任期
     bool success = 2;         // 是否成功追加
     uint64 match_index = 3;   // 成功追加到的最后一条日志索引（优化加速同步）
 }
 
+// --- 节点的 RPC 方法 ---
+service RaftService {
+  rpc AppendEntries(AppendEntriesRequest) returns (AppendEntriesResponse);
+  rpc RequestVote(RequestVoteRequest) returns (RequestVoteResponse);
+}
+
+
+
 // --- InstallSnapshot RPC ---
+// message InstallSnapshotRequest {
+//     uint64 term = 1;               // 当前任期
+//     uint64 leader_id = 2;           // Leader ID
+//     uint64 last_included_index = 3; // 快照包含到哪个日志索引
+//     uint64 last_included_term = 4;  // 快照包含的最后日志任期
+//     bytes snapshot_data = 5;        // 快照二进制数据
+// }
 
-message InstallSnapshotRequest {
-    uint64 term = 1;               // 当前任期
-    uint64 leader_id = 2;           // Leader ID
-    uint64 last_included_index = 3; // 快照包含到哪个日志索引
-    uint64 last_included_term = 4;  // 快照包含的最后日志任期
-    bytes snapshot_data = 5;        // 快照二进制数据
-}
-
-message InstallSnapshotResponse {
-    uint64 term = 1;        // 当前任期
-    bool success = 2;       // 是否成功接收快照
-}
-
-// --- 客户端请求（可选扩展）---
-
-message ClientRequest {
-    string type = 1;   // "get", "set", "delete"
-    string key = 2;
-    string value = 3;  // get/delete可以不填
-}
-
-message ClientResponse {
-    bool success = 1;
-    string value = 2;  // get请求时返回的值
-    string error = 3;  // 错误信息
-}
+// message InstallSnapshotResponse {
+//     uint64 term = 1;        // 当前任期
+//     bool success = 2;       // 是否成功接收快照
+// }

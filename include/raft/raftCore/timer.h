@@ -10,6 +10,11 @@
 
 class Timer {
 public:
+    // using Clock = std::chrono::steady_clock;
+    // using TimePoint = Clock::time_point;
+    // using Duration = Clock::duration;
+    // using Callback = std::function<void()>;
+
     // 构造函数，传入回调函数和时间间隔
     Timer(std::function<void()> callback, std::chrono::milliseconds interval, bool repeat = true) 
         : callback_(callback), interval_(interval), repeat_(repeat),active_(false) {}
