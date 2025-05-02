@@ -1,4 +1,5 @@
 # raftKVStorage/src/raft/raftClerk/CMakeLists.txt
-add_library(clerkTest STATIC
+add_executable(clerkTest
     clerk.cpp
+    main.cpp
 )

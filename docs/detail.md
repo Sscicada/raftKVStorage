@@ -73,3 +73,15 @@ raft/
     ├── raft_config.h / cpp         # 节点ID、端口、集群信息
     └── cluster_info.h / cpp        # 当前集群状态（成员、角色）
 ```
+
+## Raft 的 init 函数：
+启动 Raft 协议中的 3 个定时任务，分别是：
+
+- 领导者发送心跳（leaderHearBeatTicker）
+
+- 候选者发起选举（electionTimeOutTicker）
+
+- 日志应用到状态机（applierTicker）
+
+实现方式：
+1、线程；2、定时器；3、协程；4、其他事件循环库
