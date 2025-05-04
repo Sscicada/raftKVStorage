@@ -12,6 +12,8 @@
 */
 class PersistentStorage {
 public:
+    PersistentStorage() = default;
+
     void persist(int term, int votedFor, const std::vector<LogEntry>& log);
     void readPersist(int& term, int& votedFor, std::vector<LogEntry>& log) const;
 

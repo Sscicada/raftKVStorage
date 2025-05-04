@@ -7,27 +7,27 @@
 #include <memory>
 #include <iostream>
 
+#include <raftClerk/clerk.h>
 #include <raftCore/raft_log.h>
-#include <raftCore/state_machine.h>
+#include <raftCore/raft_node.h>
+#include <raftCore/kv_server.h>
 #include <storage/persistent_storage.h>
 
-/*
-单节点追加日志
-*/
 int main() {
     // 初始化日志模块
     RaftLog raftLog;
 
     raftLog.appendEntry(LogEntry{0, 0, "put x 1"});
 
-    // 初始化状态机（KV存储）
-    KVStore stateMachine;
-
     raftLog.appendEntry(entry);
-    // storage.saveLog(raftLog.getEntries()); // 持久化日志
 
-    // 查询状态机是否成功写入
-    std::cout << "Query result of key 'x': " << stateMachine.query("x") << std::endl;
+    RaftNode node1;
+
+    node1.init();
+
+    node1.start();
+
+    // RaftClerk clerk1;
 
     return 0;
 }

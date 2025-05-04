@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message PersistentState {
+    uint64 currentTerm = 1;
+    int32 votedFor = 2;          // -1 表示未投票
+    repeated LogEntry logEntries = 3;
+    // bytes snapshot = 4;          // 快照数据
+}

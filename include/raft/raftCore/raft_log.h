@@ -19,6 +19,8 @@
 */
 class RaftLog {
 public:
+    RaftLog() : commitIndex_(0), lastApplied_(0) {}
+
     void appendEntry(const LogEntry& entry);    // 追加日志
     void truncateFrom(int index);               // 截断日志
     void commitTo(int index);                   // 提交日志
@@ -31,6 +33,7 @@ public:
 
     void loadFromStorage(PersistentStorage& storage);
     void saveToStorage(PersistentStorage& storage);
+
 
 private:
     std::vector<LogEntry> log_;

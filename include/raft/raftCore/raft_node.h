@@ -29,12 +29,12 @@ struct Op {
     Op() : Operation(""), Key(""), Value(""), ClientId(""), RequestId(0) {}
 };
 
+// 一方面继承了 RPC 服务端，另一方面作为 RPC 客户端
 class RaftNode : public raft::RaftRPCService::Service {
 public:
     // RaftNode(int id, const RaftConfig& config);
 
-    RaftNode(int id, const std::vector<std::string>& peers, int me, PersistentStorage& storage)
-        : role_(Role::Follower), currentTerm_(0), votedFor_(-1), log_(nullptr);
+    RaftNode();
 
     ~RaftNode();
 
@@ -42,8 +42,8 @@ public:
     RaftNode(const RaftNode&) = delete;
     RaftNode& operator=(const RaftNode&) = delete;
 
-    // 初始化 Raft 节点
-    void init();
+    // 初始化 Raft 节点，内部启动三个线程
+    void init(const std::vector<std::string>& peers, int me, RaftLog* log, PersistentStorage& storage);
 
     // 将命令追加到 Leader 本地日志中，并持久化
     std::future<ApplyResult> Raft::start(Op command);
@@ -70,19 +70,26 @@ private:
     // 作为 Leader 发送心跳消息，包括发送日志，调整 index等
     void sendHeartbeats();
 
+    // 发送投票请求
+    bool sendRequestVote(int index, std::shared_ptr<raftRpcProctoc::RequestVoteRequests> requests,
+        std::shared_ptr<raftRpcProctoc::RequestVoteReply> reply, std::shared_ptr<int> votedNum);
+
     // 心跳消息超时，触发选举，转变为 candidate，并向其他节点发起投票，不断尝试直到出现新的 leader
     void startElection();
 
+    // 保存节点状态
+    void saveRaftState();
+
     // 节点角色
     Role role_;
-    int currentTerm_;
-    int votedFor_;
+    int term_;
+    int voted_for_;
 
     // 下一条即将发送的日志索引
-    std::vector<int> next_index;
+    std::vector<int> next_index_;
 
     // 已复制的最高日志索引
-    std::vector<int> match_index;
+    std::vector<int> match_index_;
 
     // 网络通信层，保存到其他节点的 RPC 连接
     std::vector<std::shared_ptr<RaftRPCC>> peers_;
