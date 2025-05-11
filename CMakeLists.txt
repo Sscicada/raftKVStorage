@@ -17,32 +17,29 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 # 设置项目库文件输出的路径
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-# set(PROTO_FILES
-#     ${PROJECT_SOURCE_DIR}/proto/friend.proto
-#     ${PROJECT_SOURCE_DIR}/proto/rpcheader.proto
-# )
+set(PROTO_FILES
+        ${PROJECT_SOURCE_DIR}/proto/raft.proto
+        ${PROJECT_SOURCE_DIR}/proto/server.proto
+        ${PROJECT_SOURCE_DIR}/proto/friend.proto
+        ${PROJECT_SOURCE_DIR}/proto/rpcheader.proto
+)
 
 # message(STATUS "PROTO_FILES=${PROTO_FILES}")  # 打印路径确认
 
 # 编译 proto 文件，生成相应的 C++ 头文件和源文件
-# protobuf_generate_cpp(PROTO_SRC PROTO_HDR ${PROTO_FILES})
+protobuf_generate_cpp(PROTO_SRC PROTO_HDR ${PROTO_FILES})
+add_library(proto_obj OBJECT ${PROTO_SRC})  # 创建中间目标
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+# message(STATUS "cmake=${CMAKE_CURRENT_BINARY_DIR}")  # 应显示生成的 .pb.h 文件路径
 
 # message("成功编译 proto 文件")
 # message(STATUS "PROTO_SRC=${PROTO_SRC}")  # 应显示生成的 .pb.cc 文件路径
 # message(STATUS "PROTO_HDR=${PROTO_HDR}")  # 应显示生成的 .pb.h 文件路径
 
 # 设置项目编译头文件搜索路径
-# include_directories(${PROJECT_SOURCE_DIR}/include/common)
-# include_directories(${PROJECT_SOURCE_DIR}/include/fiber)
-# include_directories(${PROJECT_SOURCE_DIR}/include/rpc)
 include_directories(${PROJECT_SOURCE_DIR}/example)
-# include_directories(${CMAKE_BINARY_DIR}/example/rpc)
-
 include_directories(${PROJECT_SOURCE_DIR}/include/raft)
-# include_directories(${PROJECT_SOURCE_DIR}/include/raftRpcPro)
-# include_directories(${PROJECT_SOURCE_DIR}/include/raftClerk)
-# include_directories(${PROJECT_SOURCE_DIR}/include/skipList)
-
 include_directories(${PROJECT_SOURCE_DIR}/third_party/muduo/include)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/protobuf/include)
 

@@ -34,7 +34,6 @@ public:
     void loadFromStorage(PersistentStorage& storage);
     void saveToStorage(PersistentStorage& storage);
 
-
 private:
     std::vector<LogEntry> log_;
     int commitIndex_;

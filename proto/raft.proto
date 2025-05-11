@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+option cc_generic_services = true;  //开启stub服务
+
 // 命名空间
 package raft;
 

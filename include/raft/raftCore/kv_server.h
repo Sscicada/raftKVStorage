@@ -6,9 +6,10 @@
 #include <unordered_map>
 
 #include <raftCore/raft_log.h>
+#include <server.pb.h>
 
 // 上层服务，负责 KV 存储
-class KVServer {
+class KVServer : public kvServer::kvServerRpc  {
 public:
     bool connect(std::vector<std::string> peers);
 

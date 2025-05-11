@@ -19,13 +19,9 @@ int main() {
 
     raftLog.appendEntry(LogEntry{0, 0, "put x 1"});
 
-    raftLog.appendEntry(entry);
 
     RaftNode node1;
 
-    node1.init();
-
-    node1.start();
 
     // RaftClerk clerk1;
 

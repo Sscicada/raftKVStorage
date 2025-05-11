@@ -1,5 +1,12 @@
 syntax = "proto3";
 
+// --- 基本的 Log Entry 定义 ---
+message LogEntry {
+    uint64 index = 1;       // 日志索引
+    uint64 term = 2;        // 日志对应的任期
+    bytes command = 3;     // 客户端指令，这里用 bytes 而不是 string
+}
+
 message PersistentState {
     uint64 currentTerm = 1;
     int32 votedFor = 2;          // -1 表示未投票

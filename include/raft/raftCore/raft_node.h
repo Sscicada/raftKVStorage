@@ -6,18 +6,12 @@
 #include <future>
 
 #include <raftCore/raft_log.h>
+#include <raftCore/raft_rpc.h>
 #include <raftCore/kv_server.h>
 #include <storage/persistent_storage.h>
 
 #include "raft.pb.h"
-#include "raft.grpc.pb.h" // 生成RaftRpcService::Stub
-#include <grpcpp/grpcpp.h>
-
-enum class Role {
-    Follower, 
-    Candidate, 
-    Leader
-};
+#include <service.h>  // 包含 Closure 定义
 
 struct Op {
     std::string Operation;  // 操作类型
@@ -30,13 +24,13 @@ struct Op {
 };
 
 // 一方面继承了 RPC 服务端，另一方面作为 RPC 客户端
-class RaftNode : public raft::RaftRPCService::Service {
+class RaftNode : public raft::RaftRPCService {
 public:
     // RaftNode(int id, const RaftConfig& config);
 
-    RaftNode();
+    RaftNode() {};
 
-    ~RaftNode();
+    ~RaftNode() {};
 
     // 禁止拷贝
     RaftNode(const RaftNode&) = delete;
@@ -46,33 +40,35 @@ public:
     void init(const std::vector<std::string>& peers, int me, RaftLog* log, PersistentStorage& storage);
 
     // 将命令追加到 Leader 本地日志中，并持久化
-    std::future<ApplyResult> Raft::start(Op command);
+    void start(Op command);
 
     // 重写基类方法
     // 领导者向其他节点发送日志复制和心跳消息
-    void AppendEntries(google::protobuf::RpcController *controller, const ::raftRpcProctoc::AppendEntriesArgs *request,
-        ::raftRpcProctoc::AppendEntriesReply *response, ::google::protobuf::Closure *done) override;
+    void AppendEntries(::google::protobuf::RpcController *controller, const ::raft::AppendEntriesRequest *request,
+        ::raft::AppendEntriesReply *response, ::google::protobuf::Closure *done) override;
 
     // 请求投票
-    void RequestVote(google::protobuf::RpcController *controller, const ::raftRpcProctoc::RequestVoteArgs *request,
-        ::raftRpcProctoc::RequestVoteReply *response, ::google::protobuf::Closure *done) override;
+    void RequestVote(::google::protobuf::RpcController *controller, const ::raft::RequestVoteRequest *request,
+        ::raft::RequestVoteReply *response, ::google::protobuf::Closure *done) override;
 
     void applyCommittedLogs();              // 应用已提交日志到状态机
     void onElectionTimeout();               // 选举超时处理
-    void onHeartbeatTimeout();              // 心跳超时处理
+    // void onHeartbeatTimeout();              // 心跳超时处理
     void stepDown(int term);                // 降级为Follower
 
 private:
+    enum class Role { Follower, Candidate, Leader };
+
     void becomeLeader();
     void becomeFollower(int term);
     void becomeCandidate();
 
     // 作为 Leader 发送心跳消息，包括发送日志，调整 index等
-    void sendHeartbeats();
+    // void sendHeartbeats();
 
     // 发送投票请求
-    bool sendRequestVote(int index, std::shared_ptr<raftRpcProctoc::RequestVoteRequests> requests,
-        std::shared_ptr<raftRpcProctoc::RequestVoteReply> reply, std::shared_ptr<int> votedNum);
+    bool sendRequestVote(int index, std::shared_ptr<raft::RequestVoteRequest> requests,
+        std::shared_ptr<raft::RequestVoteReply> reply, std::shared_ptr<int> votedNum);
 
     // 心跳消息超时，触发选举，转变为 candidate，并向其他节点发起投票，不断尝试直到出现新的 leader
     void startElection();
@@ -92,7 +88,7 @@ private:
     std::vector<int> match_index_;
 
     // 网络通信层，保存到其他节点的 RPC 连接
-    std::vector<std::shared_ptr<RaftRPCC>> peers_;
+    std::vector<std::shared_ptr<RaftRPC>> peers_;
 
     RaftLog* log_;
     PersistentStorage storage_;
