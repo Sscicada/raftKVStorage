@@ -7,27 +7,31 @@
 #include <memory>
 #include <iostream>
 
+#include <rpcchannel.h>
+#include <rpcprovider.h>
 #include <raftClerk/clerk.h>
 #include <raftCore/raft_log.h>
 #include <raftCore/raft_node.h>
 #include <raftCore/kv_server.h>
 #include <storage/persistent_storage.h>
 
+const std::string ip = "127.0.0.1";
+const short port = 4357;
+
+// 实现单节点同客户端通信，中间通过 kv 存储服务层
+// 每个节点一个独立进程 + 本地 TCP 通信
 int main() {
-    // 初始化日志模块
-    RaftLog raftLog;
+    auto stub = new kvServer::kvServerRpc_Stub(new RpcChannel(ip, port, false));
+    // provider是一个rpc网络服务对象。把UserService对象发布到rpc节点上
+    RpcProvider provider;
+    // 服务注册
+    provider.NotifyService(new KVServer());
 
-    raftLog.appendEntry(LogEntry{0, 0, "put x 1"});
-
-
-    RaftNode node1;
-
-
-    // RaftClerk clerk1;
+    // 启动一个rpc服务发布节点   Run以后，进程进入阻塞状态，等待远程的rpc调用请求
+    provider.Run(1, port);
 
     return 0;
 }
-
 
 // std::shared_ptr<RaftNode> g_raft_node;
 

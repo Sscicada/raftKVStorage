@@ -42,6 +42,8 @@ message PutAppendReply  {
     bytes Err = 1;
 }
 
+// 客户端不直接和 raft 层交互，而是通过 kv 存储服务层
+// 这里提供 kv 存储方法供客户端使用
 service kvServerRpc {
     rpc PutAppend(PutAppendArgs) returns(PutAppendReply);
     rpc Get (GetArgs) returns (GetReply);

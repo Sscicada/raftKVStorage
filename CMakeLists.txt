@@ -40,11 +40,13 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # 设置项目编译头文件搜索路径
 include_directories(${PROJECT_SOURCE_DIR}/example)
 include_directories(${PROJECT_SOURCE_DIR}/include/raft)
+include_directories(${PROJECT_SOURCE_DIR}/include/rpc)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/muduo/include)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/protobuf/include)
 
 # 设置项目库文件搜索路径 -L
 link_directories(${PROJECT_SOURCE_DIR}/lib)
+link_directories(${PROJECT_SOURCE_DIR}/third_party/muduo/lib)
 
 # src 包含所有核心模块代码
 add_subdirectory(src)
